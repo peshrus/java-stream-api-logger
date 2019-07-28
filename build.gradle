@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+    id "io.freefair.lombok" version "3.8.0"
+    id 'maven'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'org.javassist:javassist:3.25.0-GA'
+    implementation 'org.slf4j:slf4j-api:2.0.0-alpha0'
+
+    testImplementation 'junit:junit:4.12'
+}
+
+jar {
+    manifest {
+        attributes('premain-class': 'com.peshchuk.java.stream.api.logger.StreamAgent')
+    }
+}
+
+group 'com.peshchuk'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
