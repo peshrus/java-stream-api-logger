@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -25,16 +23,10 @@ public class StreamTransformer implements ClassFileTransformer {
   private static final List<String> NOT_TO_INSTRUMENT =
       unmodifiableList(asList("peek", "makeRef"));
 
-  private static final Set<String> instrumented = ConcurrentHashMap.newKeySet();
-
   public byte[] transform(final ClassLoader loader, final String className,
       final Class classBeingRedefined, final ProtectionDomain protectionDomain,
       final byte[] classfileBuffer) {
     if (!className.startsWith(PACKAGE_TO_INSTRUMENT)) {
-      return classfileBuffer;
-    }
-
-    if (!instrumented.add(className)) {
       return classfileBuffer;
     }
 
