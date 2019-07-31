@@ -1,6 +1,7 @@
 package com.peshchuk.java.stream.api.logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -67,7 +68,7 @@ public class PeekConsumerTest {
 
     // Assert
     assertEquals(Level.DEBUG, loggingLevel.get());
-    assertEquals(value + " (JUnitStarter.java:70)", loggingMsg.toString());
+    assertTrue(loggingMsg.toString().matches(value + " \\([^()]+.java:\\d+\\)"));
   }
 
   private Appender<ILoggingEvent> mockAppender() {
