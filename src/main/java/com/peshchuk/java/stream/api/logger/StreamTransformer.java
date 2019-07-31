@@ -69,10 +69,9 @@ public class StreamTransformer implements ClassFileTransformer {
       try {
         if (isToInstrument(ctMethod, methodName, baseStreamClass)) {
           log.trace("Instrument method: {}", methodName);
-          ctMethod
-              .insertAfter(
-                  "$_ = $_.peek(new com.peshchuk.java.stream.api.logger.PeekConsumer(\"" + ctMethod
-                      .getName() + "\"));");
+          ctMethod.insertAfter(
+              "$_ = $_.peek(new com.peshchuk.java.stream.api.logger.PeekConsumer(\"" + ctMethod
+                  .getName() + "\"));");
         }
       } catch (final NotFoundException ex) {
         log.error("Instrumentation error: {}#{}", ctClass.getName(), methodName, ex);
