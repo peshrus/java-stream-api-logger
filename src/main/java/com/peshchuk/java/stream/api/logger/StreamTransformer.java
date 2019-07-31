@@ -1,11 +1,15 @@
 package com.peshchuk.java.stream.api.logger;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -13,24 +17,28 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
+@SuppressWarnings("unused")
 @Slf4j
 public class StreamTransformer implements ClassFileTransformer {
 
-  private static final KeySetView<Object, Boolean> INSTRUMENTED = ConcurrentHashMap.newKeySet();
-  private static final String PEEK = "peek";
+  private static final String PACKAGE_TO_INSTRUMENT = "java/util/stream";
+  private static final List<String> NOT_TO_INSTRUMENT =
+      unmodifiableList(asList("peek", "makeRef"));
+
+  private static final Set<String> instrumented = ConcurrentHashMap.newKeySet();
 
   public byte[] transform(final ClassLoader loader, final String className,
       final Class classBeingRedefined, final ProtectionDomain protectionDomain,
       final byte[] classfileBuffer) {
-    if (!className.startsWith("java/util/stream")) {
+    if (!className.startsWith(PACKAGE_TO_INSTRUMENT)) {
       return classfileBuffer;
     }
 
-    if (!INSTRUMENTED.add(className)) {
+    if (!instrumented.add(className)) {
       return classfileBuffer;
     }
 
-    log.debug("Instrumentation start: {}", className);
+    log.trace("Instrumentation start: {}", className);
 
     try {
       return doInstrumentation(classfileBuffer);
@@ -38,7 +46,7 @@ public class StreamTransformer implements ClassFileTransformer {
       log.error("Instrumentation error: {}", className, ex);
       return classfileBuffer;
     } finally {
-      log.debug("Instrumentation end: {}", className);
+      log.trace("Instrumentation end: {}", className);
     }
   }
 
@@ -60,7 +68,7 @@ public class StreamTransformer implements ClassFileTransformer {
 
       try {
         if (isToInstrument(ctMethod, methodName, baseStreamClass)) {
-          log.debug("Instrument method: {}", methodName);
+          log.trace("Instrument method: {}", methodName);
           ctMethod
               .insertAfter(
                   "$_ = $_.peek(new com.peshchuk.java.stream.api.logger.PeekConsumer(\"" + ctMethod
@@ -82,7 +90,7 @@ public class StreamTransformer implements ClassFileTransformer {
       final CtClass baseStreamClass) throws NotFoundException {
     final CtClass returnType = ctMethod.getReturnType();
 
-    return !PEEK.equals(methodName)
+    return !NOT_TO_INSTRUMENT.contains(methodName)
         && !ctMethod.isEmpty()
         && !returnType.equals(baseStreamClass)
         && returnType.subtypeOf(baseStreamClass);
